@@ -2,24 +2,26 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <conio.h>
+#include <string.h>
 
-#define BEGIN 0
+#define HEAD 0
 
 typedef struct linked_list_item LL_ITEM;
 struct linked_list_item{
-	
-	char* data;
+	void* data;
 	struct linked_list_item *next;
 };
 
 typedef struct linked_list_head LL_HEAD;
 struct linked_list_head{
 	int size;
+	int data_size;
+	char* data_description;
 	LL_ITEM *next;
 };
 
 
-LL_ITEM* new_item(char* data)
+LL_ITEM* new_item(void* data)
 {
 	LL_ITEM* item = malloc(sizeof(LL_ITEM));
 	item->next = NULL;
@@ -27,24 +29,31 @@ LL_ITEM* new_item(char* data)
 	return item;
 }
 
-LL_HEAD *new_head()
+LL_HEAD *new_head(int data_size, char* data_description)
 {
 	LL_HEAD *head = malloc(sizeof(LL_HEAD));
 	head->next = NULL;
+	head->size = 0;
+	head->data_description = data_description;
 	return head;
 }
 
 int add_item(LL_HEAD** head, LL_ITEM* item, int position)
 {
-	LL_ITEM* iterator = NULL;
-	int i = 0;
-	
 	assert(head != NULL);
 	assert(item != NULL);
 	
+	LL_ITEM* iterator = NULL;
+	int i = 0;
+	
 	if((*head)->next == NULL){
 		(*head)->next = item;
-		return 1;
+		return 0;
+	}
+	else if(position == HEAD){
+		item->next = (*head)->next;
+		(*head)->next = item;
+		return 0;
 	}
 	else iterator = (*head)->next;
 
@@ -59,12 +68,8 @@ int add_item(LL_HEAD** head, LL_ITEM* item, int position)
 	}
 	iterator->next = item;
 	(*head)->size ++;
-	return 1;
-}
-
-static inline LL_ITEM* add_last(LL_HEAD** head, LL_ITEM* item)
-{
-	return NULL;
+	
+	return 0;
 }
 
 int find_position(LL_HEAD** head, LL_ITEM* item)
@@ -86,28 +91,60 @@ int find_position(LL_HEAD** head, LL_ITEM* item)
 	return position;
 }
 
+int free_LL_ITEM(LL_ITEM* item)
+{
+	free(item->data);
+	free(item);
+	return 0;
+}
+
+int free_LL(LL_HEAD** head)
+{
+	assert(head != NULL);
+	
+	LL_ITEM* iterator = (*head)->next;
+	LL_ITEM* delete;
+	
+	while(iterator != NULL)
+	{
+		delete = iterator;
+		iterator = iterator->next;
+		free_LL_ITEM(delete);
+	}
+	free(*head);
+	return 0;
+}
+
 int print_LL(LL_HEAD** head)
 {
 	assert(head != NULL);
 	
 	LL_ITEM* iterator = (*head)->next;
 	
+	char format[100];
+	if(strcmp((*head)->data_description, "string") == 0)snprintf(format,100, "%s %s %s", "| data:", "%s", " |");
+	else if(strcmp((*head)->data_description, "int") == 0)snprintf(format,100, "%s %s %s", "| data:", "%d", " |");
+	else if(strcmp((*head)->data_description, "bin") == 0)snprintf(format,100, "%s %s %s", "| data:", "%h", " |");
+
+	
 	while(iterator != NULL)
 	{
-		printf("| data : %s |", iterator->data);
+		//printf("| data : %s |", iterator->data);
+		printf(format, *(iterator->data));
 		printf("  -->  ");
 		iterator = iterator->next;
 	}
 	
-	return 1;
+	return 0;
 }
 
 int main(int args, char* argv[])
 {
-	LL_HEAD *head = new_head();
-	LL_ITEM *i1 = new_item("i1");
-	LL_ITEM *i2 = new_item("i2");
-	LL_ITEM *i3 = new_item("i3");
+	LL_HEAD *head = new_head(sizeof(char*), "int");
+	int a = 1, b = 2, c = 3;
+	LL_ITEM *i1 = new_item(&a);
+	LL_ITEM *i2 = new_item(&b);
+	LL_ITEM *i3 = new_item(&c);
 	
 	add_item(&head, i1, 1);
 	add_item(&head, i2, 2);
@@ -116,8 +153,6 @@ int main(int args, char* argv[])
 	print_LL(&head);
 	fflush(stdout); 
 	//getchar();
-	free(head);
-	free(i1);
-	free(i2);
+	free_LL(&head);
 	return 0;
 }
