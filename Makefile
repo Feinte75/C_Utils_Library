@@ -1,10 +1,15 @@
 CC=gcc
 CFLAGS=-Wall -Wextra -std=c11 -pedantic -g
+SRCS= linked_list.c example.c
 
-default : linked_list
+OBJS= $(SRCS:.c=.o)
 
-linked_list : linked_list.o
-	$(CC) $(CFLAGS) -o linked_list linked_list.o
+default : example
+	
+example : $(OBJS)
+	$(CC) $^ -o $@
+	
+%.o : %.c
+	$(CC) $< $(CFLAGS) -c -o $@
 
-linked_list.o : linked_list.c linked_list.h
-	$(CC) $(CFLAGS) -c linked_list.c
+clean : rm *.o
